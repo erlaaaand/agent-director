@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from src.core.entities import CreativeDocumentBatch, ScriptDocumentBatch
 from src.core.exceptions import LLMGenerationError, StorageError
 from src.core.ports import LLMPort, StoragePort
+from src.infrastructure.llm.validator import validate_script
 
 logger = logging.getLogger(__name__)
 
@@ -49,19 +50,40 @@ class DirectorUseCase:
         scripts = []
         for doc in input_batch.documents:
             try:
+                # 1. Generate draf
                 draft_script = self._llm.generate_script(doc)
                 logger.info(
                     "Draf berhasil dibuat  topic='%s'  id='%s'",
                     doc.trend_identity.topic,
                     doc.document_id,
                 )
+
+                # 2. Refine draf dengan Qwen editor
                 final_script = self._llm.refine_script(draft_script)
-                scripts.append(final_script)
                 logger.info(
                     "Skrip final berhasil disempurnakan  topic='%s'  id='%s'",
                     doc.trend_identity.topic,
                     doc.document_id,
                 )
+
+                # 3. Validasi QA — log isu tapi tetap simpan hasilnya
+                validation = validate_script(final_script)
+                if validation.has_warnings:
+                    logger.warning(
+                        "Skrip lulus dengan %d isu QA  topic='%s'  id='%s'",
+                        len(validation.issues),
+                        doc.trend_identity.topic,
+                        doc.document_id,
+                    )
+                else:
+                    logger.info(
+                        "Skrip lulus QA tanpa isu  topic='%s'  id='%s'",
+                        doc.trend_identity.topic,
+                        doc.document_id,
+                    )
+
+                scripts.append(final_script)
+
             except LLMGenerationError as exc:
                 logger.error(
                     "Gagal memproses skrip untuk topic='%s': %s",

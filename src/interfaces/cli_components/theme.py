@@ -16,6 +16,10 @@ THEME = Theme(
         "prompt": "bold cyan",
         "hook": "magenta",
         "stat": "bold yellow",
+        "menu_key": "bold green",
+        "region": "bold yellow",
+        "filename": "cyan",
+        "category": "dim cyan",
     }
 )
 

@@ -5,14 +5,14 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from src.core.entities import ScriptDocumentBatch
+from src.core.entities import CreativeDocumentBatch, ScriptDocumentBatch
 from src.interfaces.cli_components.theme import console
 
 
 def print_header() -> None:
     title = Text()
     title.append("🎬  Agent Director", style="header")
-    title.append("   — Scene-by-Scene Script Generator", style="subheader")
+    title.append("   — Interactive Script Generator", style="subheader")
     console.print()
     console.print(Panel(str(title), border_style="blue", padding=(0, 2)))
 
@@ -21,7 +21,7 @@ def print_goodbye() -> None:
     console.print()
     console.print(
         Panel.fit(
-            "[header]✦  Semua skrip berhasil dibuat. Happy creating![/header]",
+            "[header]✦  Session ended. Happy creating![/header]",
             border_style="blue",
             padding=(0, 2),
         )
@@ -45,13 +45,84 @@ def print_error(title: str, detail: str, hint: str = "") -> None:
     console.print()
 
 
+def print_no_files() -> None:
+    console.print()
+    console.print(
+        Panel(
+            "[warning]⚠  Tidak ada file JSON ditemukan di folder input.[/warning]\n"
+            "[hint]Taruh file output dari agent_market_intelligence ke folder data/input/\n"
+            "Struktur yang didukung: data/input/<REGION>/<TANGGAL>/file.json[/hint]",
+            border_style="yellow",
+            title="[warning]Folder Input Kosong[/warning]",
+            padding=(0, 2),
+        )
+    )
+    console.print()
+
+
+def print_file_preview(batch: CreativeDocumentBatch, filename: str) -> None:
+    console.print()
+    total = len(batch.documents)
+
+    tbl = Table(
+        title=(
+            f"[header]Preview File[/header]  "
+            f"[filename]{filename}[/filename]  "
+            f"[subheader]· Region: {batch.region} · Tanggal: {batch.date} · {total} topik[/subheader]"
+        ),
+        box=box.ROUNDED,
+        border_style="blue",
+        header_style="bold cyan",
+        show_lines=True,
+        expand=True,
+        padding=(0, 1),
+    )
+
+    tbl.add_column("#", style="number", justify="right", width=3, no_wrap=True)
+    tbl.add_column("Document ID", style="subheader", width=22, no_wrap=True)
+    tbl.add_column("Topik", style="topic", min_width=20)
+    tbl.add_column("Kategori", style="category", min_width=18)
+    tbl.add_column("Momentum", justify="center", width=10)
+    tbl.add_column("Lifecycle", justify="center", width=12)
+
+    for i, doc in enumerate(batch.documents, start=1):
+        ti = doc.trend_identity
+        metrics = ti.metrics
+
+        momentum = metrics.get("momentum_score", "-")
+        momentum_str = f"{float(momentum):.1f}" if isinstance(momentum, (int, float)) else str(momentum)
+
+        lifecycle = metrics.get("lifecycle_stage", "-")
+        lifecycle_style_map = {
+            "Peak": "bold red",
+            "Trending": "bold bright_green",
+            "Emerging": "bold green",
+            "Stagnant": "yellow",
+            "Declining": "dim red",
+        }
+        lifecycle_style = lifecycle_style_map.get(str(lifecycle), "subheader")
+
+        doc_id_short = doc.document_id[:20] + ("…" if len(doc.document_id) > 20 else "")
+
+        tbl.add_row(
+            str(i),
+            doc_id_short,
+            ti.topic,
+            ti.category,
+            Text(momentum_str, justify="center"),
+            Text(str(lifecycle), style=lifecycle_style, justify="center"),
+        )
+
+    console.print(tbl)
+    console.print()
+
+
 def print_results(batches: list[ScriptDocumentBatch]) -> None:
     if not batches:
         console.print()
         console.print(
             Panel(
-                "[warning]⚠  Tidak ada skrip yang berhasil dibuat.[/warning]\n"
-                "[hint]Pastikan folder data/input berisi file JSON dari agent_market_intelligence.[/hint]",
+                "[warning]⚠  Tidak ada skrip yang berhasil dibuat.[/warning]",
                 border_style="yellow",
                 title="[warning]Tidak Ada Output[/warning]",
                 padding=(0, 2),
@@ -90,9 +161,7 @@ def print_results(batches: list[ScriptDocumentBatch]) -> None:
             title_preview = script.distribution_assets.suggested_title
             if len(title_preview) > 45:
                 title_preview = title_preview[:43] + "…"
-
             total_dur = sum(s.estimated_duration_sec for s in script.scenes)
-
             tbl.add_row(
                 str(idx),
                 script.topic,

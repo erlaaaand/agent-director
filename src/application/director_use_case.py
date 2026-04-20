@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
-from src.core.entities import ScriptDocumentBatch
+from src.core.entities import CreativeDocumentBatch, ScriptDocumentBatch
 from src.core.exceptions import LLMGenerationError, StorageError
 from src.core.ports import LLMPort, StoragePort
 
@@ -15,13 +15,17 @@ class DirectorUseCase:
         self._storage = storage
         self._llm = llm
 
-    def execute(self) -> list[ScriptDocumentBatch]:
-        files = self._storage.list_input_files()
+    def execute(self, target_filename: str | None = None) -> list[ScriptDocumentBatch]:
+        if target_filename is not None:
+            files = [target_filename]
+        else:
+            files = self._storage.list_input_files()
+
         if not files:
-            logger.info("Tidak ada file input yang ditemukan di direktori input.")
+            logger.info("Tidak ada file input yang ditemukan.")
             return []
 
-        logger.info("Ditemukan %d file input untuk diproses.", len(files))
+        logger.info("Memproses %d file.", len(files))
         results: list[ScriptDocumentBatch] = []
 
         for filename in files:
@@ -34,6 +38,9 @@ class DirectorUseCase:
                 logger.error("Error tidak terduga pada file '%s': %s", filename, exc)
 
         return results
+
+    def get_file_preview(self, filename: str) -> CreativeDocumentBatch:
+        return self._storage.read_input(filename)
 
     def _process_file(self, filename: str) -> ScriptDocumentBatch:
         logger.info("Memproses file: '%s'", filename)
@@ -65,13 +72,12 @@ class DirectorUseCase:
         ts = datetime.now(tz=timezone.utc).strftime("%H%M%SZ")
         output_filename = f"scripts_{input_batch.region}_{input_batch.date}_{ts}.json"
         self._storage.save_output(output_batch, output_filename)
-
         self._storage.archive_input(filename)
+
         logger.info(
-            "File '%s' selesai diproses  scripts=%d  output='%s'",
+            "File '%s' selesai  scripts=%d  output='%s'",
             filename,
             len(scripts),
             output_filename,
         )
-
         return output_batch

@@ -18,7 +18,8 @@ class Settings(BaseSettings):
     OUTPUT_DATA_PATH: str = Field(default="data/output")
 
     OLLAMA_BASE_URL: str = Field(default="http://localhost:11434")
-    OLLAMA_MODEL: str = Field(default="qwen2.5:7b")
+    OLLAMA_MODEL_GENERATOR: str = Field(default="llama3:latest")
+    OLLAMA_MODEL_EVALUATOR: str = Field(default="qwen2.5:7b")
     OLLAMA_TIMEOUT: float = Field(default=180.0, ge=10.0)
     OLLAMA_RETRIES: int = Field(default=2, ge=1, le=5)
 

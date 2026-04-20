@@ -33,10 +33,16 @@ class LocalStorageAdapter(StoragePort):
                 raise StorageError(path=str(d), reason=str(exc)) from exc
 
     def list_input_files(self) -> list[str]:
-        return sorted(
-            p.name for p in self._input.glob("*.json")
-            if p.is_file() and not p.name.startswith("_")
-        )
+        results = []
+        for p in sorted(self._input.rglob("*.json")):
+            if not p.is_file():
+                continue
+            relative = p.relative_to(self._input)
+            parts = relative.parts
+            if any(part.startswith("_") for part in parts):
+                continue
+            results.append(str(relative))
+        return results
 
     def read_input(self, filename: str) -> CreativeDocumentBatch:
         path = self._input / filename
@@ -68,9 +74,11 @@ class LocalStorageAdapter(StoragePort):
 
     def archive_input(self, filename: str) -> None:
         src = self._input / filename
-        dst = self._archive / filename
+        relative = Path(filename)
+        dst = self._archive / relative
         try:
+            dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.move(str(src), str(dst))
-            logger.info("Input diarsipkan: '%s' → _processed/", filename)
+            logger.info("Input diarsipkan: '%s' → _processed/%s", filename, filename)
         except (OSError, shutil.Error) as exc:
             logger.warning("Gagal mengarsipkan '%s': %s", filename, exc)

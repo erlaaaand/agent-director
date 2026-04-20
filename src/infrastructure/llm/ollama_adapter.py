@@ -10,7 +10,7 @@ from src.core.entities import CreativeDocument, ScriptDocument
 from src.core.exceptions import LLMGenerationError
 from src.core.ports import LLMPort
 from src.infrastructure.llm.parser import parse_script_document
-from src.infrastructure.llm.prompts import SYSTEM_PROMPT, build_user_message
+from src.infrastructure.llm.prompts import SYSTEM_PROMPT, EDITOR_SYSTEM_PROMPT, build_user_message, build_editor_message
 
 logger = logging.getLogger(__name__)
 

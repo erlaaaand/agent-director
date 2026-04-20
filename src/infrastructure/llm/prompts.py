@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from src.core.entities import CreativeDocument
+from src.core.entities import CreativeDocument, ScriptDocument
 
 SYSTEM_PROMPT: Final[str] = """
 [PERAN]
@@ -80,6 +80,24 @@ Berhenti men-generate scene jika cerita dan CTA sudah selesai. DILARANG KERAS me
 }
 """.strip()
 
+EDITOR_SYSTEM_PROMPT: Final[str] = """
+[PERAN]
+Anda adalah Editor Naskah Video Senior. Tugas Anda adalah mensanitasi JSON naskah video pendek yang dibuat oleh tim kreatif.
+
+[TUGAS UTAMA]
+1. Pastikan 'audio_narration' dan 'on_screen_text' 100% menggunakan Bahasa Indonesia yang luwes dan kasual (Gen-Z).
+2. Jika ada teks Bahasa Inggris di narasinya, terjemahkan secara kontekstual ke Bahasa Indonesia.
+3. DILARANG KERAS mengubah 'visual_prompt'. Biarkan tetap dalam Bahasa Inggris.
+4. JANGAN menambah atau mengurangi jumlah scene.
+5. Perbaiki typo atau instruksi pemalas seperti 'Scene 1' di teks layar.
+
+[ATURAN OUTPUT]
+- Balas HANYA dengan JSON murni.
+- Jangan ada teks penjelasan apa pun.
+""".strip()
+
+def build_editor_message(draft: ScriptDocument) -> str:
+    return f"Berikut adalah draf JSON naskah yang harus Anda perbaiki:\n\n{draft.model_dump_json(indent=2)}"
 
 def build_user_message(document: CreativeDocument) -> str:
     topic = document.trend_identity.topic

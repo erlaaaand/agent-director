@@ -27,3 +27,7 @@ class LLMPort(ABC):
     @abstractmethod
     def generate_script(self, document: CreativeDocument) -> ScriptDocument:
         ...
+
+    @abstractmethod
+    def refine_script(self, draft: ScriptDocument) -> ScriptDocument:
+        ...

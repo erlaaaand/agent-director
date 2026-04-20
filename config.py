@@ -13,13 +13,20 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+    
+    OLLAMA_GEN_MODEL: str = Field(
+        default="llama3:latest",
+        description="Model untuk tahap pembuatan naskah kreatif (Llama 3).",
+    )
+    OLLAMA_EVAL_MODEL: str = Field(
+        default="qwen2.5:7b",
+        description="Model untuk tahap evaluasi dan terjemahan (Qwen).",
+    )
 
     INPUT_DATA_PATH: str = Field(default="data/input")
     OUTPUT_DATA_PATH: str = Field(default="data/output")
 
     OLLAMA_BASE_URL: str = Field(default="http://localhost:11434")
-    OLLAMA_MODEL_GENERATOR: str = Field(default="llama3:latest")
-    OLLAMA_MODEL_EVALUATOR: str = Field(default="qwen2.5:7b")
     OLLAMA_TIMEOUT: float = Field(default=180.0, ge=10.0)
     OLLAMA_RETRIES: int = Field(default=2, ge=1, le=5)
 

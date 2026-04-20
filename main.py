@@ -38,10 +38,12 @@ def main() -> None:
 
     logger.info(
         "agent_director starting  "
-        "model=[magenta]'%s'[/magenta]  "
+        "gen_model=[magenta]'%s'[/magenta]  "
+        "eval_model=[yellow]'%s'[/yellow]  "
         "input=[cyan]'%s'[/cyan]  "
         "output=[green]'%s'[/green]",
-        settings.OLLAMA_MODEL,
+        settings.OLLAMA_GEN_MODEL,
+        settings.OLLAMA_EVAL_MODEL,
         settings.INPUT_DATA_PATH,
         settings.OUTPUT_DATA_PATH,
     )
@@ -53,7 +55,8 @@ def main() -> None:
 
     llm = OllamaLLMAdapter(
         base_url=settings.OLLAMA_BASE_URL,
-        model=settings.OLLAMA_MODEL,
+        gen_model=settings.OLLAMA_GEN_MODEL,
+        eval_model=settings.OLLAMA_EVAL_MODEL,
         timeout=settings.OLLAMA_TIMEOUT,
         retries=settings.OLLAMA_RETRIES,
     )

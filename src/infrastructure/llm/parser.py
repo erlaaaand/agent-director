@@ -14,6 +14,11 @@ from src.core.entities import (
     ScriptDocument,
 )
 from src.core.exceptions import LLMGenerationError
+from src.infrastructure.llm.sanitizer import (
+    sanitize_audio_narration,
+    sanitize_on_screen_text,
+    translate_leaked_english,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +117,21 @@ def _coerce_scenes(raw: Any) -> list[dict[str, Any]]:
     return result
 
 
+def _apply_scene_sanitization(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    sanitized = []
+    for scene in scenes:
+        narration = scene.get("audio_narration", "")
+        narration = translate_leaked_english(narration)
+        narration = sanitize_audio_narration(narration)
+
+        on_screen = scene.get("on_screen_text", "")
+        on_screen = translate_leaked_english(on_screen)
+        on_screen = sanitize_on_screen_text(on_screen)
+
+        sanitized.append({**scene, "audio_narration": narration, "on_screen_text": on_screen})
+    return sanitized
+
+
 def parse_script_document(
     content: str,
     model: str,
@@ -141,6 +161,7 @@ def parse_script_document(
     )
     dist_assets = _coerce_distribution_assets(raw.get("distribution_assets"), topic)
     scenes = _coerce_scenes(raw.get("scenes"))
+    scenes = _apply_scene_sanitization(scenes)
 
     if not scenes:
         raise LLMGenerationError(

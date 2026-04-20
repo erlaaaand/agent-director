@@ -49,16 +49,22 @@ class DirectorUseCase:
         scripts = []
         for doc in input_batch.documents:
             try:
-                script = self._llm.generate_script(doc)
-                scripts.append(script)
+                draft_script = self._llm.generate_script(doc)
                 logger.info(
-                    "Skrip berhasil dibuat  topic='%s'  id='%s'",
+                    "Draf berhasil dibuat  topic='%s'  id='%s'",
+                    doc.trend_identity.topic,
+                    doc.document_id,
+                )
+                final_script = self._llm.refine_script(draft_script)
+                scripts.append(final_script)
+                logger.info(
+                    "Skrip final berhasil disempurnakan  topic='%s'  id='%s'",
                     doc.trend_identity.topic,
                     doc.document_id,
                 )
             except LLMGenerationError as exc:
                 logger.error(
-                    "Gagal generate skrip untuk topic='%s': %s",
+                    "Gagal memproses skrip untuk topic='%s': %s",
                     doc.trend_identity.topic,
                     exc.message,
                 )

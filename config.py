@@ -13,15 +13,9 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
-    
-    OLLAMA_GEN_MODEL: str = Field(
-        default="llama3:latest",
-        description="Model untuk tahap pembuatan naskah kreatif (Llama 3).",
-    )
-    OLLAMA_EVAL_MODEL: str = Field(
-        default="qwen2.5:7b",
-        description="Model untuk tahap evaluasi dan terjemahan (Qwen).",
-    )
+
+    OLLAMA_GEN_MODEL: str = Field(default="llama3:latest")
+    OLLAMA_EVAL_MODEL: str = Field(default="qwen2.5:7b")
 
     INPUT_DATA_PATH: str = Field(default="data/input")
     OUTPUT_DATA_PATH: str = Field(default="data/output")
